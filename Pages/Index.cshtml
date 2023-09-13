@@ -1,0 +1,136 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+
+<div class="container">
+    <h1>Form Page</h1>
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label for="negara">Negara:</label>
+                <input type="text" id="negara" name="negara" class="form-control" />
+            </div>
+            <div class="form-group col-md-6">
+                <label for="pelabuhan">Pelabuhan:</label>
+                <input type="text" id="pelabuhan" name="pelabuhan" class="form-control" />
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label for="barang">Barang:</label>
+                <input type="text" id="barang" name="barang" class="form-control" />
+            </div>
+            <div class="form-group col-md-6">
+                <label for="harga">Harga:</label>
+                <input type="text" id="harga" name="harga" class="form-control" />
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="deskripsi">Deskripsi Barang:</label>
+            <textarea id="deskripsi" name="deskripsi" disabled class="form-control" rows="4"></textarea>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label for="totalBeaMasuk">Total Bea Masuk (%):</label>
+                <input type="text" id="totalBeaMasuk" disabled name="totalBeaMasuk" class="form-control" />
+            </div>
+            <div class="form-group col-md-6">
+                <label for="hxt">Harga x Tarif:</label>
+                <input type="text" id="hxt" name="hxt" disabled class="form-control" />
+            </div>
+        </div>
+        <b>APInya tidak bisa diakses ^.^</b>
+</div>
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    // Negara
+    $(document).ready(function () {
+        $('#negara').autocomplete({
+            source: function (request, response) {
+                if (request.term.length >= 3) {
+                    $.ajax({
+                        url: 'https://insw-dev.ilcs.co.id/n/negara?ur_negara=' + request.term,
+                        type: "GET",
+                        dataType: 'json',
+                        success: function (data) {
+                            response(data);
+                        }
+                    });
+                }
+            },
+            minLength: 3 // Menentukan panjang karakter minimum sebelum permintaan API dikirim
+        });
+    });
+
+    // Pelabuhan
+    $(document).ready(function () {
+        $('#pelabuhan').autocomplete({
+            source: function (request, response) {
+                if (request.term.length >= 3) {
+                    $.ajax({
+                        url: 'https://insw-dev.ilcs.co.id/n/pelabuhan?'+'kd_negara='+$('#negara').attr("data-id")+"&ur_pelabuhan=" + request.term,
+                        type: "GET",
+                        dataType: 'json',
+                        success: function (data) {
+                            response(data);
+                        }
+                    });
+                }
+            },
+            minLength: 3 // Menentukan panjang karakter minimum sebelum permintaan API dikirim
+        });
+    });
+
+    // Deskripsi Barang
+    $(document).ready(function () {
+        $('#barang').on('input', function () {
+            var value = $(this).val();
+            if (value) {
+                $.ajax({
+                    url: "https://insw-dev.ilcs.co.id/n/barang?",
+                    type: "GET",
+                    data: { hs_code: value },
+                    dataType: "json",
+                    success: function (data) {
+                        $("#deskripsi").text(data.data[0].sub_header + data.data[0].uraian_id)
+                    },
+                    error: function (xhr, status, error) {
+                        $("#deskripsi").text("")
+                    }
+                });
+            }
+        });
+    });
+
+    // tarif bea masuk
+    $(document).ready(function () {
+        $('#barang').on('input', function () {
+            var value = $(this).val();
+            if (value) {
+                $.ajax({
+                    url: "https://insw-dev.ilcs.co.id/n/tarif?",
+                    type: "GET",
+                    data: { hs_code: value },
+                    dataType: "json",
+                    success: function (data) {
+                        $("#totalBeaMasuk").val(data.data[0].bm)
+                    },
+                    error: function (xhr, status, error) {
+                        $("#totalBeaMasuk").val(0)
+                    }
+                });
+            }
+        });
+    });
+
+    // harga * tarif bea masuk
+    $(document).ready(function () {
+        $("#harga").on('input', function () {
+            $("#hxt").val(($("#harga").val() * $("#totalBeaMasuk").val()) / 100)                   
+        })
+    });
+</script>
+
